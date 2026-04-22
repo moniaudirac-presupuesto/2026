@@ -531,7 +531,7 @@ tbody td{padding:10px 14px;font-size:13px;}
       <option value="efectivo">💵 Efectivo / Débito</option>
       <option value="amex001">💳 AMEX 001 (corte 25 · pago 7)</option>
       <option value="amex005">💳 AMEX 005 (corte 3 · pago 23)</option>
-      <option value="rappicard">💳 Rappicard</option>
+      <option value="rappicard">💳 Rappicard (corte 15 · pago 3)</option>
       <option value="bbva">💳 BBVA Crédito</option>
       <option value="otro">💳 Otra tarjeta</option>
     </select>
@@ -854,8 +854,9 @@ function getMSITotal(tarjeta, m){ return getMSIBaseTotal(tarjeta,m)+getMSINewTot
 function getEffectiveMes(fechaStr, tarjeta){
   const d = new Date(fechaStr+'T12:00:00');
   const day = d.getDate(), m = d.getMonth();
-  if(tarjeta==='amex001') return day<=25 ? m : m+1;
-  if(tarjeta==='amex005') return day<=3  ? m : m+1;
+  if(tarjeta==='amex001')   return day<=25 ? m : m+1;
+  if(tarjeta==='amex005')   return day<=3  ? m : m+1;
+  if(tarjeta==='rappicard') return day<=15 ? m : m+1;
   return m;
 }
 
@@ -864,15 +865,15 @@ function calcMesEfectivo(){
   const fecha = document.getElementById('g-fecha').value;
   const tarjeta = document.getElementById('g-tarjeta').value;
   const box = document.getElementById('g-mes-info');
-  if(!fecha || (tarjeta!=='amex001' && tarjeta!=='amex005')){ box.style.display='none'; return; }
+  if(!fecha || (tarjeta!=='amex001' && tarjeta!=='amex005' && tarjeta!=='rappicard')){ box.style.display='none'; return; }
   const d = new Date(fecha+'T12:00:00');
   const day = d.getDate(), mesCompra = MESES[d.getMonth()];
-  const cutDay = tarjeta==='amex001' ? 25 : 3;
-  const payDay = tarjeta==='amex001' ? 7 : 23;
-  const payWhen = tarjeta==='amex001' ? 'siguiente' : 'mismo';
+  const cutDay = tarjeta==='amex001' ? 25 : tarjeta==='amex005' ? 3 : 15;
+  const payDay = tarjeta==='amex001' ? 7  : tarjeta==='amex005' ? 23 : 3;
+  const payWhen = tarjeta==='amex001' ? 'siguiente' : 'siguiente';
   const efectivo = getEffectiveMes(fecha, tarjeta);
   const mesPres = efectivo<12 ? MESES[efectivo] : 'Enero 2027';
-  const despues = tarjeta==='amex001' ? day>25 : day>3;
+  const despues = day > cutDay;
   box.style.display='block';
   if(despues){
     box.style.background='var(--yellow-bg)'; box.style.borderColor='var(--yellow-b)'; box.style.color='var(--yellow)';
